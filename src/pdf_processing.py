@@ -77,7 +77,7 @@ def populating_pdf_with_json_data(pdf_path, output_pdf_path, texts, coords, whit
                 most_similar_sentence, similarity_score = find_most_similar_sentence(text, english_keys)
                 value = str(get_json_value(json, most_similar_sentence) or "")
             
-                text_width = len(text) * 2
+                text_width = len(text) * 3
 
                 insertion_x = coord.x1 + 5  
                 insertion_y = coord.y0  
@@ -120,3 +120,26 @@ def populating_pdf_with_json_data(pdf_path, output_pdf_path, texts, coords, whit
     doc.save(output_pdf_path)
     doc.close()
     print(f"Values populated in PDF and saved as '{output_pdf_path}'.")
+
+
+def get_shape_area(pdf_path):
+    doc = fitz.open(pdf_path)
+    page = doc[0]
+
+    page.wrap_contents()
+
+    paths = page.get_drawings()
+
+    min_x, min_y = float('inf'), float('inf')
+    max_x, max_y = float('-inf'), float('-inf')
+
+    for i, path in enumerate(paths, start=1):
+        for item in path["items"]:
+            if item[0] == "re" and i > 2:  
+                x0, y0, x1, y1 = item[1]
+
+                min_x, max_x = min(min_x, x0, x1), max(max_x, x0, x1)
+                min_y, max_y = min(min_y, y0, y1), max(max_y, y0, y1)
+
+    doc.close()
+    return (min_x, min_y, max_x, max_y)
